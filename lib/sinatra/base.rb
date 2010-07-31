@@ -58,7 +58,7 @@ module Sinatra
     def finish
       @body = block if block_given?
       if [204, 304].include?(status.to_i)
-        header.delete "Content-Type"
+        header.delete RESPONSE_CTYPE_KEY
         [status.to_i, header.to_hash, []]
       else
         body = @body || []
