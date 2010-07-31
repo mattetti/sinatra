@@ -460,7 +460,7 @@ module Sinatra
     # Run filters defined on the class and all superclasses.
     def filter!(type, base = self.class)
       filter! type, base.superclass if base.superclass.respond_to?(:filters)
-      base.filters[type].each { |block| instance_eval(&block) }
+      base.filters[type].each { |block| instance_eval(&block) } if base.filters
     end
 
     # Run routes defined on the class and all superclasses.
