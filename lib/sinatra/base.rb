@@ -20,6 +20,7 @@ end
 
 module Sinatra
   VERSION = '1.0'
+  RESPONSE_CTYPE_KEY = 'Content-Type'
 
   # The request object. See Rack::Request for more info:
   # http://rack.rubyforge.org/doc/classes/Rack/Request.html
@@ -134,11 +135,11 @@ module Sinatra
     def content_type(type, params={})
       mime_type = mime_type(type)
       fail "Unknown media type: %p" % type if mime_type.nil?
-      if params.any?
-        params = params.collect { |kv| "%s=%s" % kv }.join(', ')
-        response['Content-Type'] = [mime_type, params].join(";")
+      if params.empty?
+        response[RESPONSE_CTYPE_KEY] = mime_type
       else
-        response['Content-Type'] = mime_type
+        params = params.map{|k,v| "#{k}=#{v}"}.join(', ')
+        response[RESPONSE_CTYPE_KEY] = "#{mime_type};#{params}"
       end
     end
 
@@ -159,7 +160,7 @@ module Sinatra
 
       content_type mime_type(opts[:type]) ||
         mime_type(File.extname(path)) ||
-        response['Content-Type'] ||
+        response[RESPONSE_CTYPE_KEY] ||
         'application/octet-stream'
 
       response['Content-Length'] ||= (opts[:length] || stat.size).to_s
@@ -837,7 +838,7 @@ module Sinatra
         condition {
           matching_types = (request.accept & types)
           unless matching_types.empty?
-            response.headers['Content-Type'] = matching_types.first
+            response.headers[RESPONSE_CTYPE_KEY] = matching_types.first
             true
           else
             false
