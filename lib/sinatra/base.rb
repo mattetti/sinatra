@@ -21,6 +21,9 @@ end
 module Sinatra
   VERSION = '1.0'
   RESPONSE_CTYPE_KEY = 'Content-Type'
+  RESPONSE_CLENGTH_KEY = 'Content-Length'
+  ENV_REQUEST_METHOD  = 'REQUEST_METHOD'
+  HEAD = 'HEAD'
 
   # The request object. See Rack::Request for more info:
   # http://rack.rubyforge.org/doc/classes/Rack/Request.html
@@ -64,7 +67,7 @@ module Sinatra
         body = @body || []
         body = [body] if body.respond_to? :to_str
         if body.respond_to?(:to_ary)
-          header["Content-Length"] = body.to_ary.
+          header[RESPONSE_CLENGTH_KEY] = body.to_ary.
             inject(0) { |len, part| len + Rack::Utils.bytesize(part) }.to_s
         end
         [status.to_i, header.to_hash, body]
@@ -163,7 +166,7 @@ module Sinatra
         response[RESPONSE_CTYPE_KEY] ||
         'application/octet-stream'
 
-      response['Content-Length'] ||= (opts[:length] || stat.size).to_s
+      response[RESPONSE_CLENGTH_KEY] ||= (opts[:length] || stat.size).to_s
 
       if opts[:disposition] == 'attachment' || opts[:filename]
         attachment opts[:filename] || path
@@ -418,9 +421,9 @@ module Sinatra
       # Never produce a body on HEAD requests. Do retain the Content-Length
       # unless it's "0", in which case we assume it was calculated erroneously
       # for a manual HEAD response and remove it entirely.
-      if @env['REQUEST_METHOD'] == 'HEAD'
+      if @env[ENV_REQUEST_METHOD] == HEAD
         body = []
-        header.delete('Content-Length') if header['Content-Length'] == '0'
+        header.delete(RESPONSE_CLENGTH_KEY) if header[RESPONSE_CLENGTH_KEY] == '0'
       end
 
       [status, header, body]
